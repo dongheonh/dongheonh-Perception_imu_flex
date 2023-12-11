@@ -3,7 +3,7 @@
 % 12/09/2023
 
 clear, clc
-
+load flexCalibration.mat
 s = serialport("/dev/tty.usbmodem14401",9600);
 
 % check the data readings for the flex sensors
@@ -22,8 +22,6 @@ fprintf('\n')
 
 % save important data
 number_IMUs = 3;
-rmse_pitch = zeros(10,number_IMUs);
-pitch = zeros(10,number_IMUs);
 
 
 % ask which sensor are you calibrating
@@ -74,13 +72,13 @@ if response_start == 's'
         data = readline(s);
         parsedData = sscanf(data, "%f, %f, %f, %f, %f, %f, " + ...
             "%f, %f, %f, %f, %f, %f");
-        pitch_fx_data(iter_mean,1) = orient_iter_ea(length(orient_iter_ea) ...
+        pitch_fx_data(i,1) = orient_iter_ea(length(orient_iter_ea) ...
             - 3 + sensorNum)';
-        sum_pitch_fx = sum_pitch_fx + pitch_fx_data(iter_mean,1);   
+        sum_pitch_fx = sum_pitch_fx + pitch_fx_data(i,1);   
     end
  
         pitchMean = sum_pitch_fx/iter_mean;
-        var = pitch_fx - pitchMean * ones(iter_mean,1);
+        var = pitch_fx_data - pitchMean * ones(iter_mean,1);
         sum_rmse = 0;
 
         for i = 1: iter_mean

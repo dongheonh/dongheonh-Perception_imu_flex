@@ -19,6 +19,7 @@ function plotRobotArm(roll, pitch, yaw, armLength, fig_color, x_lim, y_lim, z_li
         % Plot the segment
         plot3([x endpoint(1)], [y endpoint(2)], [z endpoint(3)], 'LineWidth', 5, 'Color', fig_color);
         grid on; hold on; 
+        scatter3(endpoint(1), endpoint(2), endpoint(3),'filled');
   
         axis equal;
         xlabel('X'); ylabel('Y'); zlabel('Z');

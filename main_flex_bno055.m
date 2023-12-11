@@ -10,7 +10,7 @@ tic;                        % record time
 s = serialport("/dev/tty.usbmodem14401",9600);
 
 orient = [];                % ith column is ith angular orientation 
-maxIteration = 2*10^2;      % approximately 20 seconds of data collecting
+maxIteration = 10*10^2;      % approximately 20 seconds of data collecting
 iteration = 0;              % initialize the iteration
 
 armLength = 80;             % each of arms length in mm 
@@ -79,9 +79,10 @@ if response == 'y'
         rollsum  = rollsum + roll;
 
         % Flex Sensor
-        pitch_fx = flexSensor_volt_angle(orient_iter_ea(length ...
-            (orient_iter_ea) - 2: length(orient_iter_ea)));
-        pitch_fxsum = pitch_fxsum + pitch_fx;
+        pitch_fx = orient_iter_ea(length ...
+            (orient_iter_ea) - 2: length(orient_iter_ea));
+        pitch_fx_ang = flexSensor_volt_angle(pitch_fx);
+        pitch_fxsum = pitch_fxsum + pitch_fx_ang';
     end
     
     % IMUs
@@ -98,7 +99,7 @@ if response == 'y'
     offset_yaw   = 90*ones(number_IMUs,1) - m_yaw;
     
     % Flex offset
-    offset_pitch_fx = 90*ones(number_Flex,1) - m_pitch_fx;
+    offset_pitch_fx = zeros(number_Flex,1) - m_pitch_fx;
 
 else
     disp('Terminating program.');
@@ -149,17 +150,19 @@ while whileFlag
     % data from the flex sensor
     pitch_fx = orient_iter_ea(length(orient_iter_ea) - 2: ...
         length(orient_iter_ea))';
+    pitch_fx_ang = flexSensor_volt_angle(pitch_fx)';
+
 
     % apply offsets
-    pitch_fx = offset_pitch_fx + pitch_fx;
+    pitch_fx_ang =  90 - (offset_pitch_fx + pitch_fx_ang);
     
     % print IMU and flex sensor orientation in command window
-    fprintf(['***IMUs : pitch: %2d,%2d,%2d| roll: %2d,%2d,%2d| ' ...
-        'yaw: %2d,%2d,%2d\n'], pitch(1),pitch(2),pitch(3), roll(1), ...
+    fprintf(['***IMUs : pitch: %.3g,%.3g,%.3g| roll: %.3g,%.3g,%.3g| ' ...
+        'yaw: %.3g,%.3g,%.3g\n'], pitch(1),pitch(2),pitch(3), roll(1), ...
         roll(2), roll(3), yaw(1), yaw(2), yaw(3))
-
-    fprintf('***Flex Sensor: pitch: %d,%d,%d\n\n', pitch_fx(1), ...
-        pitch_fx(2), pitch_fx(3))
+    
+    fprintf('***Flex Sensor: pitch: %.3g,%.3g,%.3g\n\n', pitch_fx_ang(1), ...
+        pitch_fx_ang(2), pitch_fx_ang(3))
     
     % @ figure 1
     figure(1)
@@ -168,8 +171,9 @@ while whileFlag
     hold on 
 
     % @ figure 2
-    plotRobotArm(pitch_flex, [90; 90; 90], [90; 90; 90], armLength, ...
-        fig_color1, x_lim, y_lim, z_lim)
+    plotRobotArm(pitch_fx_ang, [90; 90; 90], [90; 90; 90], armLength, ...
+        fig_color2, x_lim, y_lim, z_lim)
+    hold off
 
     % (optional) save orientation data - expand the matrix size
     orient = [orient; orient_iter_ea];
